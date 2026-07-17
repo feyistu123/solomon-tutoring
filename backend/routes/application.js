@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Application = require('../models/Application');
+const Notification = require('../models/Notification');
 const authenticateToken = require('../middleware/authMiddleware');
 
 // @route   POST /api/applications
@@ -92,8 +93,11 @@ router.post('/', async (req, res) => {
 
     await application.save();
 
-    // Send confirmation email (optional - implement later)
-    // await sendConfirmationEmail(email, parentName);
+    await Notification.create({
+      type: 'new_application',
+      message: `New application from ${parentName} for ${studentName} (${studentGrade})`,
+      applicationId: application._id
+    });
 
     res.status(201).json({
       message: 'Application submitted successfully! Mr. Solomon will contact you within 24 hours.',
@@ -314,11 +318,20 @@ router.patch('/:id/status', authenticateToken, async (req, res) => {
       });
     }
 
+    const oldStatus = application.status;
     application.status = status;
     if (followUpDate) application.followUpDate = followUpDate;
     if (notes) application.notes = notes;
     application.updatedAt = Date.now();
     await application.save();
+
+    if (oldStatus !== status) {
+      await Notification.create({
+        type: 'status_change',
+        message: `Status changed for ${application.parentName}'s application: ${oldStatus} → ${status}`,
+        applicationId: application._id
+      });
+    }
 
     res.json({
       message: 'Status updated successfully',

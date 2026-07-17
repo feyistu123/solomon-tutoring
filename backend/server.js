@@ -7,6 +7,8 @@ const cors = require('cors');
 // Import routes
 const authRoutes = require('./routes/auth');
 const applicationRoutes = require('./routes/application');
+const notificationRoutes = require('./routes/notifications');
+const emailRoutes = require('./routes/email');
 
 const app = express();
 
@@ -21,6 +23,8 @@ connectDB();
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/application', applicationRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/email', emailRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
