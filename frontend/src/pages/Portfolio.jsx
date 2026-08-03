@@ -9,7 +9,9 @@ const GRADES = ['Nursery','KG','Grade 1','Grade 2','Grade 3','Grade 4','Grade 5'
 const FREQUENCIES = ['1 day/week','2 days/week','3 days/week','4 days/week','5 days/week','Weekends only','Flexible'];
 const DURATIONS = ['1 hour','1.5 hours','2 hours','Flexible'];
 const BUDGETS = ['Under 2,000 Birr/month','2,000 - 3,000 Birr/month','3,000 - 5,000 Birr/month','5,000 - 7,000 Birr/month','7,000 - 10,000 Birr/month','Above 10,000 Birr/month','Prefer not to say'];
-const SOURCES = ['Friend/Family','Social Media','Google Search','School Recommendation','Flyer/Poster','Other'];
+const SOURCES = ['Friend/Family','Social Media','Google Search','School Recommendation','Other'];
+
+const initialContact = { name:'', email:'', subject:'', message:'' };
 
 const initialForm = {
   parentName:'', email:'', phone:'', address:'',
@@ -25,6 +27,27 @@ export default function Portfolio() {
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const [contactForm, setContactForm] = useState(initialContact);
+  const [contactSubmitting, setContactSubmitting] = useState(false);
+  const [contactSuccess, setContactSuccess] = useState('');
+  const [contactError, setContactError] = useState('');
+
+  const setC = (k, v) => setContactForm(f => ({ ...f, [k]: v }));
+
+  const handleContactSubmit = async (e) => {
+    e.preventDefault();
+    setContactSubmitting(true); setContactError(''); setContactSuccess('');
+    try {
+      const { data } = await axios.post(`${API}/contact`, contactForm);
+      setContactSuccess(data.message);
+      setContactForm(initialContact);
+    } catch (err) {
+      setContactError(err.response?.data?.message || 'Failed to send. Please try again.');
+    } finally {
+      setContactSubmitting(false);
+    }
+  };
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -62,7 +85,8 @@ export default function Portfolio() {
             <button onClick={() => scrollTo('about')}>About</button>
             <button onClick={() => scrollTo('services')}>Services</button>
             <button onClick={() => scrollTo('testimonials')}>Testimonials</button>
-            <button onClick={() => scrollTo('contact')}>Contact</button>
+            <button onClick={() => scrollTo('enquire')}>Enquire</button>
+            <button onClick={() => scrollTo('contact')}>Apply</button>
           </nav>
           <button className="pf-nav__cta" onClick={() => scrollTo('contact')}>Book a Session</button>
           <button className="pf-nav__burger" onClick={() => setMenuOpen(o => !o)}>
@@ -313,6 +337,76 @@ export default function Portfolio() {
         </div>
       </section>
 
+      {/* ── ENQUIRE / CONTACT PARENTS ── */}
+      <section id="enquire" className="pf-enquire">
+        <div className="pf-section__inner">
+          <div className="pf-enquire__grid">
+            <div className="pf-enquire__info">
+              <span className="pf-label">Get In Touch</span>
+              <h2>Have a Question<br/>or Comment?</h2>
+              <p>Whether you have a question about tutoring, want to share feedback, or simply want to learn more before applying — Mr. Solomon is happy to hear from you.</p>
+              <div className="pf-enquire__items">
+                <div className="pf-enquire__item">
+                  <div className="pf-enquire__item-icon">💬</div>
+                  <div>
+                    <div className="pf-enquire__item-title">Ask a Question</div>
+                    <div className="pf-enquire__item-desc">Not sure if tutoring is right for your child? Ask anything.</div>
+                  </div>
+                </div>
+                <div className="pf-enquire__item">
+                  <div className="pf-enquire__item-icon">📝</div>
+                  <div>
+                    <div className="pf-enquire__item-title">Leave a Comment</div>
+                    <div className="pf-enquire__item-desc">Share your thoughts, suggestions, or feedback.</div>
+                  </div>
+                </div>
+                <div className="pf-enquire__item">
+                  <div className="pf-enquire__item-icon">⚡</div>
+                  <div>
+                    <div className="pf-enquire__item-title">Quick Response</div>
+                    <div className="pf-enquire__item-desc">Mr. Solomon responds to all messages within 24 hours.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="pf-enquire__form-wrap">
+              <div className="pf-enquire__card">
+                <h3>Send a Message</h3>
+                <p>Fill in your details and Mr. Solomon will reply to your email directly.</p>
+
+                {contactSuccess && <div className="pf-alert pf-alert--ok">✅ {contactSuccess}</div>}
+                {contactError   && <div className="pf-alert pf-alert--err">❌ {contactError}</div>}
+
+                <form onSubmit={handleContactSubmit} className="pf-enquire__form">
+                  <div className="pf-form__row">
+                    <div className="pf-field">
+                      <label>Your Name *</label>
+                      <input value={contactForm.name} onChange={e=>setC('name',e.target.value)} placeholder="Your full name" required/>
+                    </div>
+                    <div className="pf-field">
+                      <label>Email Address *</label>
+                      <input type="email" value={contactForm.email} onChange={e=>setC('email',e.target.value)} placeholder="your@email.com" required/>
+                    </div>
+                  </div>
+                  <div className="pf-field pf-field--full">
+                    <label>Subject *</label>
+                    <input value={contactForm.subject} onChange={e=>setC('subject',e.target.value)} placeholder="e.g. Question about Grade 5 tutoring" required/>
+                  </div>
+                  <div className="pf-field pf-field--full">
+                    <label>Message *</label>
+                    <textarea rows={5} value={contactForm.message} onChange={e=>setC('message',e.target.value)} placeholder="Write your question, comment, or feedback here..." required/>
+                  </div>
+                  <button type="submit" className="pf-btn pf-btn--navy pf-btn--full" disabled={contactSubmitting}>
+                    {contactSubmitting ? 'Sending...' : 'Send Message'}
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── CONTACT / APPLICATION FORM ── */}
       <section id="contact" className="pf-contact">
         <div className="pf-section__inner">
@@ -492,7 +586,8 @@ export default function Portfolio() {
               <button onClick={() => scrollTo('hero')}>Home</button>
               <button onClick={() => scrollTo('about')}>About</button>
               <button onClick={() => scrollTo('services')}>Services</button>
-              <button onClick={() => scrollTo('contact')}>Contact</button>
+              <button onClick={() => scrollTo('enquire')}>Enquire</button>
+              <button onClick={() => scrollTo('contact')}>Apply</button>
             </div>
             <div className="pf-footer__col">
               <div className="pf-footer__col-title">Services</div>
