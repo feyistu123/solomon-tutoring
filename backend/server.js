@@ -9,6 +9,7 @@ const authRoutes = require('./routes/auth');
 const applicationRoutes = require('./routes/application');
 const notificationRoutes = require('./routes/notifications');
 const emailRoutes = require('./routes/email');
+const contactRoutes = require('./routes/contact');
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/application', applicationRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/email', emailRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
