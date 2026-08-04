@@ -1,8 +1,22 @@
 const express = require('express');
 const router = express.Router();
+const nodemailer = require('nodemailer');
 const Contact = require('../models/Contact');
 const Notification = require('../models/Notification');
 const authenticateToken = require('../middleware/authMiddleware');
+
+function createTransporter() {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    throw new Error('EMAIL_USER or EMAIL_PASS is missing from .env');
+  }
+  return nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
+    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    tls: { rejectUnauthorized: false }
+  });
+}
 
 // POST /api/contact — public, parents send message
 router.post('/', async (req, res) => {
@@ -69,11 +83,8 @@ router.post('/:id/reply', authenticateToken, async (req, res) => {
     const contact = await Contact.findById(req.params.id);
     if (!contact) return res.status(404).json({ message: 'Message not found' });
 
-    const nodemailer = require('nodemailer');
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-    });
+    const transporter = createTransporter();
+    await transporter.verify();
 
     await transporter.sendMail({
       from: `"Mr. Solomon Tutoring" <${process.env.EMAIL_USER}>`,
@@ -102,8 +113,15 @@ router.post('/:id/reply', authenticateToken, async (req, res) => {
 
     res.json({ message: `Reply sent to ${contact.email}` });
   } catch (err) {
-    console.error('Contact reply error:', err);
-    res.status(500).json({ message: 'Failed to send email. Check email credentials in .env' });
+    console.error('Contact reply error:', err.message);
+    const msg = err.message.includes('.env')
+      ? err.message
+      : err.responseCode === 535 || err.code === 'EAUTH'
+      ? 'Gmail authentication failed. Check EMAIL_PASS in .env (use an App Password, not your Gmail password).'
+      : err.code === 'ECONNECTION' || err.code === 'ETIMEDOUT'
+      ? 'Could not connect to Gmail. Check your internet connection.'
+      : `Failed to send email: ${err.message}`;
+    res.status(500).json({ message: msg });
   }
 });
 
