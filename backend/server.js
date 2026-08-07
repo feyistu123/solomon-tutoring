@@ -14,7 +14,10 @@ const contactRoutes = require('./routes/contact');
 const app = express();
 
 // Middleware
-app.use(cors());
+// Allow requests specifically from your frontend URL
+app.use(cors({
+  origin: 'https://solomon-tutoring-frontend.onrender.com'
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
