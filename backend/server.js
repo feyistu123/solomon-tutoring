@@ -46,9 +46,9 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+// ---------- FIXED START SERVER SECTION ----------
+const PORT = process.env.PORT || 5000; // <--- THIS FALLBACK VALUE IS CRITICAL
+app.listen(PORT, '0.0.0.0', () => {    // <--- Added '0.0.0.0' for robust local networking
   console.log(`Server running on port ${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/api/health`);
 });
