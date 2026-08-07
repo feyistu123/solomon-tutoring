@@ -10,11 +10,8 @@ function createTransporter() {
     throw new Error('EMAIL_USER or EMAIL_PASS is missing from .env');
   }
   return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-    tls: { rejectUnauthorized: false }
+    service: 'gmail',
+    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
   });
 }
 
@@ -84,7 +81,6 @@ router.post('/:id/reply', authenticateToken, async (req, res) => {
     if (!contact) return res.status(404).json({ message: 'Message not found' });
 
     const transporter = createTransporter();
-    await transporter.verify();
 
     await transporter.sendMail({
       from: `"Mr. Solomon Tutoring" <${process.env.EMAIL_USER}>`,
