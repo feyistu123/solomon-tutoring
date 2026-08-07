@@ -39,7 +39,11 @@ app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     message: 'Server is running',
-    timestamp: new Date()
+    timestamp: new Date(),
+    email_user_set: !!process.env.EMAIL_USER,
+    email_pass_set: !!process.env.EMAIL_PASS,
+    jwt_secret_set: !!process.env.JWT_SECRET,
+    mongodb_set: !!process.env.MONGODB_URI
   });
 });
 
