@@ -37,7 +37,7 @@ export default function ReplyModal({ app, token, onClose, onSent }) {
     setSending(true); setError('');
     try {
       await axios.post(
-        `http://localhost:5000/api/email/reply/${app._id}`,
+        `${import.meta.env.VITE_API_URL}/email/reply/${app._id}`,
         { subject, body },
         { headers: { Authorization: `Bearer ${token}` } }
       );

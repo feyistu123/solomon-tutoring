@@ -6,7 +6,7 @@ import ReplyModal from '../components/ReplyModal';
 import ApplicationDetail from '../components/ApplicationDetail';
 import './Dashboard.css';
 
-const API = 'http://localhost:5000/api';
+const API = import.meta.env.VITE_API_URL;
 
 const STATUS_COLORS = {
   'Pending':          '#ea580c',

@@ -15,7 +15,7 @@ export default function Login() {
     e.preventDefault();
     setLoading(true); setError('');
     try {
-      const { data } = await axios.post('http://localhost:5000/api/auth/login', form);
+      const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, form);
       login(data.token);
       navigate('/dashboard');
     } catch (err) {

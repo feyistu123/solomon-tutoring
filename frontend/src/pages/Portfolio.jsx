@@ -3,7 +3,7 @@ import axios from 'axios';
 import './Portfolio.css';
 import ppImage from '../assets/pp.jpg'; 
 
-const API = 'http://localhost:5000/api';
+const API = import.meta.env.VITE_API_URL;
 
 const GRADES = ['Nursery','KG','Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8'];
 const FREQUENCIES = ['1 day/week','2 days/week','3 days/week','4 days/week','5 days/week','Weekends only','Flexible'];
