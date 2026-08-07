@@ -95,7 +95,6 @@ const ApplicationSchema = new mongoose.Schema({
       'Social Media',
       'Google Search',
       'School Recommendation',
-      'Flyer/Poster',
       'Other'
     ],
     default: 'Other'
