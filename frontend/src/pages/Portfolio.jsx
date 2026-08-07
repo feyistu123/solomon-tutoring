@@ -2,6 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import './Portfolio.css';
 import ppImage from '../assets/pp.jpg'; 
+import { Link } from 'react-router-dom';
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -606,7 +607,9 @@ export default function Portfolio() {
         </div>
         <div className="pf-footer__bottom">
           <span>© {new Date().getFullYear()} Mr. Solomon's Tutoring. All rights reserved.</span>
-          <a href="/login" className="pf-footer__admin">Admin</a>
+          <a href="/login" className="pf-footer__admin"><Link to="/login" style={{ textDecoration: 'none', color: 'inherit' }}>
+    Admin
+  </Link></a>
         </div>
       </footer>
 
