@@ -6,9 +6,6 @@ const Notification = require('../models/Notification');
 const authenticateToken = require('../middleware/authMiddleware');
 
 function createTransporter() {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    throw new Error('EMAIL_USER or EMAIL_PASS is missing from .env');
-  }
   return nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
@@ -23,12 +20,13 @@ router.post('/reply/:id', authenticateToken, async (req, res) => {
   try {
     const { subject, body } = req.body;
     if (!subject || !body) return res.status(400).json({ message: 'Subject and body are required' });
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS)
+      return res.status(500).json({ message: 'Email not configured on server. Add EMAIL_USER and EMAIL_PASS in Render environment variables.' });
 
     const application = await Application.findById(req.params.id);
     if (!application) return res.status(404).json({ message: 'Application not found' });
 
     const transporter = createTransporter();
-
     await transporter.sendMail({
       from: `"Mr. Solomon Tutoring" <${process.env.EMAIL_USER}>`,
       to: application.email,
@@ -50,15 +48,8 @@ router.post('/reply/:id', authenticateToken, async (req, res) => {
 
     res.json({ message: `Email sent to ${application.email}` });
   } catch (err) {
-    console.error('Application email error:', err.message);
-    const msg = err.message.includes('.env')
-      ? err.message
-      : err.responseCode === 535 || err.code === 'EAUTH'
-      ? 'Gmail authentication failed. Check EMAIL_PASS in .env (use an App Password, not your Gmail password).'
-      : err.code === 'ECONNECTION' || err.code === 'ETIMEDOUT'
-      ? 'Could not connect to Gmail. Check your internet connection.'
-      : `Failed to send email: ${err.message}`;
-    res.status(500).json({ message: msg });
+    console.error('Application email error:', err.message, err.code, err.responseCode);
+    res.status(500).json({ message: `Failed to send email: ${err.message}` });
   }
 });
 
