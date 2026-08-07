@@ -82,8 +82,11 @@ router.post('/:id/reply', authenticateToken, async (req, res) => {
     const contact = await Contact.findById(req.params.id);
     if (!contact) return res.status(404).json({ message: 'Message not found' });
 
+    console.log('Sending contact reply to:', contact.email);
+    console.log('From:', process.env.EMAIL_USER);
+
     const transporter = createTransporter();
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: `"Mr. Solomon Tutoring" <${process.env.EMAIL_USER}>`,
       to: contact.email,
       subject,
@@ -100,6 +103,8 @@ router.post('/:id/reply', authenticateToken, async (req, res) => {
       </div>`
     });
 
+    console.log('Contact reply sent:', info.messageId);
+
     await contact.updateOne({ read: true });
     await Notification.create({
       type: 'reply_sent',
@@ -109,7 +114,10 @@ router.post('/:id/reply', authenticateToken, async (req, res) => {
 
     res.json({ message: `Reply sent to ${contact.email}` });
   } catch (err) {
-    console.error('Contact reply error:', err.message, err.code, err.responseCode);
+    console.error('Contact reply error — message:', err.message);
+    console.error('Contact reply error — code:', err.code);
+    console.error('Contact reply error — responseCode:', err.responseCode);
+    console.error('Contact reply error — response:', err.response);
     res.status(500).json({ message: `Failed to send email: ${err.message}` });
   }
 });

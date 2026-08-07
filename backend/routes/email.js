@@ -26,8 +26,11 @@ router.post('/reply/:id', authenticateToken, async (req, res) => {
     const application = await Application.findById(req.params.id);
     if (!application) return res.status(404).json({ message: 'Application not found' });
 
+    console.log('Sending email to:', application.email);
+    console.log('From:', process.env.EMAIL_USER);
+
     const transporter = createTransporter();
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: `"Mr. Solomon Tutoring" <${process.env.EMAIL_USER}>`,
       to: application.email,
       subject,
@@ -40,6 +43,8 @@ router.post('/reply/:id', authenticateToken, async (req, res) => {
       </div>`
     });
 
+    console.log('Email sent:', info.messageId);
+
     await Notification.create({
       type: 'reply_sent',
       message: `Reply sent to ${application.parentName} (${application.email})`,
@@ -48,7 +53,10 @@ router.post('/reply/:id', authenticateToken, async (req, res) => {
 
     res.json({ message: `Email sent to ${application.email}` });
   } catch (err) {
-    console.error('Application email error:', err.message, err.code, err.responseCode);
+    console.error('Application email error — message:', err.message);
+    console.error('Application email error — code:', err.code);
+    console.error('Application email error — responseCode:', err.responseCode);
+    console.error('Application email error — response:', err.response);
     res.status(500).json({ message: `Failed to send email: ${err.message}` });
   }
 });
