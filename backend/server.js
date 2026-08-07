@@ -1,6 +1,5 @@
-const express = require('express');
-const mongoose = require('mongoose');
 require('dotenv').config();
+const express = require('express');
 const connectDB = require('./config/db');
 const cors = require('cors');
 
@@ -14,10 +13,13 @@ const contactRoutes = require('./routes/contact');
 const app = express();
 
 // Middleware
-// Allow requests specifically from your frontend URL
 app.use(cors({
-  origin: 'https://solomon-tutoring-frontend.onrender.com'
+  origin: 'https://solomon-tutoring-frontend.onrender.com',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
+app.options('*', cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
