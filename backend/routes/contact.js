@@ -26,7 +26,7 @@ router.post('/', async (req, res) => {
     if (!emailRegex.test(email))
       return res.status(400).json({ message: 'Please provide a valid email address' });
 
-    const contact = await Contact.create({ name, email, subject, message });
+    await Contact.create({ name, email, subject, message });
 
     await Notification.create({
       type: 'new_application',
@@ -40,7 +40,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// GET /api/contact — private, Mr. Solomon reads all messages
+// GET /api/contact — private
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const messages = await Contact.find().sort({ createdAt: -1 });
@@ -51,17 +51,7 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
-// PATCH /api/contact/:id/read — mark one as read
-router.patch('/:id/read', authenticateToken, async (req, res) => {
-  try {
-    await Contact.findByIdAndUpdate(req.params.id, { read: true });
-    res.json({ message: 'Marked as read' });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// PATCH /api/contact/read-all — mark all as read
+// PATCH /api/contact/read-all — MUST be before /:id routes
 router.patch('/read-all', authenticateToken, async (req, res) => {
   try {
     await Contact.updateMany({ read: false }, { read: true });
@@ -71,22 +61,30 @@ router.patch('/read-all', authenticateToken, async (req, res) => {
   }
 });
 
-// POST /api/contact/:id/reply — reply to a parent message by email
+// PATCH /api/contact/:id/read
+router.patch('/:id/read', authenticateToken, async (req, res) => {
+  try {
+    await Contact.findByIdAndUpdate(req.params.id, { read: true });
+    res.json({ message: 'Marked as read' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// POST /api/contact/:id/reply
 router.post('/:id/reply', authenticateToken, async (req, res) => {
   try {
     const { subject, body } = req.body;
-    if (!subject || !body) return res.status(400).json({ message: 'Subject and body are required' });
+    if (!subject || !body)
+      return res.status(400).json({ message: 'Subject and body are required' });
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS)
-      return res.status(500).json({ message: 'Email not configured on server. Add EMAIL_USER and EMAIL_PASS in Render environment variables.' });
+      return res.status(500).json({ message: 'Email not configured on server.' });
 
     const contact = await Contact.findById(req.params.id);
     if (!contact) return res.status(404).json({ message: 'Message not found' });
 
-    console.log('Sending contact reply to:', contact.email);
-    console.log('From:', process.env.EMAIL_USER);
-
     const transporter = createTransporter();
-    const info = await transporter.sendMail({
+    await transporter.sendMail({
       from: `"Mr. Solomon Tutoring" <${process.env.EMAIL_USER}>`,
       to: contact.email,
       subject,
@@ -103,8 +101,6 @@ router.post('/:id/reply', authenticateToken, async (req, res) => {
       </div>`
     });
 
-    console.log('Contact reply sent:', info.messageId);
-
     await contact.updateOne({ read: true });
     await Notification.create({
       type: 'reply_sent',
@@ -114,15 +110,12 @@ router.post('/:id/reply', authenticateToken, async (req, res) => {
 
     res.json({ message: `Reply sent to ${contact.email}` });
   } catch (err) {
-    console.error('Contact reply error — message:', err.message);
-    console.error('Contact reply error — code:', err.code);
-    console.error('Contact reply error — responseCode:', err.responseCode);
-    console.error('Contact reply error — response:', err.response);
+    console.error('Contact reply error:', err.message, err.code, err.responseCode);
     res.status(500).json({ message: `Failed to send email: ${err.message}` });
   }
 });
 
-// DELETE /api/contact/:id — delete a message
+// DELETE /api/contact/:id
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     await Contact.findByIdAndDelete(req.params.id);
