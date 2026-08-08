@@ -1,19 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const Contact = require('../models/Contact');
 const Notification = require('../models/Notification');
 const authenticateToken = require('../middleware/authMiddleware');
-
-function createTransporter() {
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-    tls: { rejectUnauthorized: false }
-  });
-}
 
 // POST /api/contact — public, parents send message
 router.post('/', async (req, res) => {
@@ -75,17 +65,15 @@ router.patch('/:id/read', authenticateToken, async (req, res) => {
 router.post('/:id/reply', authenticateToken, async (req, res) => {
   try {
     const { subject, body } = req.body;
-    if (!subject || !body)
-      return res.status(400).json({ message: 'Subject and body are required' });
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS)
-      return res.status(500).json({ message: 'Email not configured on server.' });
+    if (!subject || !body) return res.status(400).json({ message: 'Subject and body are required' });
+    if (!process.env.RESEND_API_KEY) return res.status(500).json({ message: 'RESEND_API_KEY not set on server.' });
 
     const contact = await Contact.findById(req.params.id);
     if (!contact) return res.status(404).json({ message: 'Message not found' });
 
-    const transporter = createTransporter();
-    await transporter.sendMail({
-      from: `"Mr. Solomon Tutoring" <${process.env.EMAIL_USER}>`,
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const { error } = await resend.emails.send({
+      from: 'Mr. Solomon Tutoring <onboarding@resend.dev>',
       to: contact.email,
       subject,
       html: `<div style="font-family:sans-serif;max-width:600px;margin:auto;padding:24px">
@@ -101,6 +89,11 @@ router.post('/:id/reply', authenticateToken, async (req, res) => {
       </div>`
     });
 
+    if (error) {
+      console.error('Resend error:', error);
+      return res.status(500).json({ message: `Failed to send email: ${error.message}` });
+    }
+
     await contact.updateOne({ read: true });
     await Notification.create({
       type: 'reply_sent',
@@ -110,7 +103,7 @@ router.post('/:id/reply', authenticateToken, async (req, res) => {
 
     res.json({ message: `Reply sent to ${contact.email}` });
   } catch (err) {
-    console.error('Contact reply error:', err.message, err.code, err.responseCode);
+    console.error('Contact reply error:', err.message);
     res.status(500).json({ message: `Failed to send email: ${err.message}` });
   }
 });
