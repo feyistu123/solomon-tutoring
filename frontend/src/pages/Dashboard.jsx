@@ -138,8 +138,7 @@ export default function Dashboard() {
     }
   };
 
-  const sendContactReply = async (e) => {
-    e.preventDefault();
+  const sendContactReply = async () => {
     setReplySending(true); setReplyResult({ text:'', ok:false });
     try {
       const { data } = await axios.post(
