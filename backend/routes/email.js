@@ -1,23 +1,34 @@
 const express = require('express');
 const router = express.Router();
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 const Application = require('../models/Application');
 const Notification = require('../models/Notification');
 const authenticateToken = require('../middleware/authMiddleware');
+
+function createTransporter() {
+  return nodemailer.createTransport({
+    host: 'smtp-relay.brevo.com',
+    port: 587,
+    secure: false,
+    auth: { user: process.env.BREVO_USER, pass: process.env.BREVO_PASS },
+    tls: { rejectUnauthorized: false }
+  });
+}
 
 // POST /api/email/reply/:id — Send email reply to a family (Private)
 router.post('/reply/:id', authenticateToken, async (req, res) => {
   try {
     const { subject, body } = req.body;
     if (!subject || !body) return res.status(400).json({ message: 'Subject and body are required' });
-    if (!process.env.RESEND_API_KEY) return res.status(500).json({ message: 'RESEND_API_KEY not set on server.' });
+    if (!process.env.BREVO_USER || !process.env.BREVO_PASS)
+      return res.status(500).json({ message: 'BREVO_USER or BREVO_PASS not set on server.' });
 
     const application = await Application.findById(req.params.id);
     if (!application) return res.status(404).json({ message: 'Application not found' });
 
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    const { error } = await resend.emails.send({
-      from: 'Mr. Solomon Tutoring <onboarding@resend.dev>',
+    const transporter = createTransporter();
+    await transporter.sendMail({
+      from: `"Mr. Solomon Tutoring" <${process.env.BREVO_USER}>`,
       to: application.email,
       subject,
       html: `<div style="font-family:sans-serif;max-width:600px;margin:auto">
@@ -28,11 +39,6 @@ router.post('/reply/:id', authenticateToken, async (req, res) => {
         <p style="color:#888;font-size:12px">This email was sent regarding your tutoring application for ${application.studentName}.</p>
       </div>`
     });
-
-    if (error) {
-      console.error('Resend error:', error);
-      return res.status(500).json({ message: `Failed to send email: ${error.message}` });
-    }
 
     await Notification.create({
       type: 'reply_sent',
