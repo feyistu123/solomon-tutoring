@@ -22,3 +22,7 @@ A full-stack professional portfolio website built with React, Node.js, and Mongo
    ```bash
    git clone https://github.com/feyistu123/solomon-tutoring.git
    cd solomon-tutoring
+
+## 🌐 Live Demo
+
+Check out the live version: [https://solomon-tutoring-frontend.onrender.com/](https://solomon-tutoring-frontend.onrender.com/)
