@@ -9,6 +9,14 @@ function PrivateRoute({ children }) {
   return isAuth ? children : <Navigate to="/login" replace />;
 }
 
+function GoogleVerification() {
+  return (
+    <div style={{ display: 'none' }}>
+      google-site-verification: google37f30e53d7466f50.html
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -19,6 +27,7 @@ export default function App() {
           <Route path="/dashboard" element={
             <PrivateRoute><Dashboard /></PrivateRoute>
           } />
+          <Route path="/google37f30e53d7466f50.html" element={<GoogleVerification />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
