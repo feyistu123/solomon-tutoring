@@ -1,0 +1,7 @@
+routes:
+  - type: rewrite
+    source: /*
+    destination: /index.html
+  - type: static
+    source: /google37f30e53d7466f50.html
+    destination: /google37f30e53d7466f50.html

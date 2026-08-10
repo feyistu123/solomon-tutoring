@@ -1,1 +1,5 @@
+# Google verification - serve the file directly
+/google37f30e53d7466f50.html /google37f30e53d7466f50.html 200
+
+# All other routes go to index.html (for React Router)
 /* /index.html 200
